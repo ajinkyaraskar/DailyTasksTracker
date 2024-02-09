@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Task Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+    }
+    .task-form input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    .task-form input[type="submit"] {
+      width: 100%;
+      background-color: #4CAF50;
+      color: white;
+      padding: 14px 20px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .task-list {
+      margin-top: 20px;
+    }
+    .task-item {
+      background-color: #f9f9f9;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 5px;
+    }
+    .task-item.completed {
+      background-color: #d4edda;
+    }
+    .task-item.pending {
+      background-color: #f8d7da;
+    }
+    .filter-buttons {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .filter-buttons button {
+      margin: 5px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 14px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Daily Task Tracker</h1>
+  <form class="task-form">
+    <input type="text" id="usernameInput" placeholder="Enter username...">
+    <input type="text" id="taskInput" placeholder="Enter task...">
+    <input type="submit" value="Add Task">
+  </form>
+  <div class="task-list" id="taskList"></div>
+  <div class="filter-buttons">
+    <button onclick="showAll()">All Tasks</button>
+    <button onclick="showCompleted()">Completed Tasks</button>
+    <button onclick="showPending()">Pending Tasks</button>
+  </div>
+</div>
+
+<div class="footer">
+  Created by: Ajinkya Raskar
+</div>
+
+<script>
+  const taskList = document.querySelector('.task-list');
+  let tasks = [];
+
+  // Check if there are any tasks stored in localStorage on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    const storedTasks = localStorage.getItem('tasks');
+    if (storedTasks) {
+      tasks = JSON.parse(storedTasks); // Load tasks from localStorage
+      showAll(); // Display all tasks
+    }
+  });
+
+  // Function to update tasks in localStorage
+  function updateLocalStorageTasks() {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+  }
+
+  function addTask(taskText) {
+    const taskItem = document.createElement('div');
+    taskItem.classList.add('task-item', 'pending');
+    taskItem.innerHTML = `
+      <span>${getCurrentDate()}</span>
+      <span>${taskText}</span>
+      <button onclick="completeTask(this)">Complete</button>
+    `;
+    taskList.appendChild(taskItem);
+    tasks.push({ text: taskText, status: 'pending' });
+    updateLocalStorageTasks(); // Update tasks in localStorage
+  }
+
+  function showAll() {
+    taskList.innerHTML = '';
+    tasks.forEach(task => {
+      addTaskToDisplay(task);
+    });
+  }
+
+  function showCompleted() {
+    taskList.innerHTML = '';
+    tasks.filter(task => task.status === 'completed').forEach(task => {
+      addTaskToDisplay(task);
+    });
+  }
+
+  function showPending() {
+    taskList.innerHTML = '';
+    tasks.filter(task => task.status === 'pending').forEach(task => {
+      addTaskToDisplay(task);
+    });
+  }
+
+  function addTaskToDisplay(task) {
+    const taskItem = document.createElement('div');
+    taskItem.classList.add('task-item', task.status);
+    taskItem.innerHTML = `
+      <span>${getCurrentDate()}</span>
+      <span>${task.text}</span>
+    `;
+    if (task.status === 'pending') {
+      taskItem.innerHTML += `<button onclick="completeTask(this)">Complete</button>`;
+    }
+    taskList.appendChild(taskItem);
+  }
+
+  function completeTask(button) {
+    const taskItem = button.parentElement;
+    taskItem.classList.remove('pending');
+    taskItem.classList.add('completed');
+    button.remove();
+    const taskText = taskItem.querySelector('span:nth-child(2)').innerText;
+    const taskIndex = tasks.findIndex(task => task.text === taskText);
+    if (taskIndex !== -1) {
+      tasks[taskIndex].status = 'completed';
+      updateLocalStorageTasks(); // Update tasks in localStorage
+    }
+  }
+
+  function getCurrentDate() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  }
+
+  document.querySelector('.task-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const taskInput = document.getElementById('taskInput');
+    const taskText = taskInput.value.trim();
+    if (taskText !== '') {
+      addTask(taskText);
+      taskInput.value = '';
+    }
+  });
+
+</script>
+
+</body>
+</html>
